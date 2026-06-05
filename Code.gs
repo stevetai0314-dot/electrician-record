@@ -5,29 +5,30 @@ var CONFIG_SHEET = '人員設定';
 function doGet(e) {
   var action = (e && e.parameter) ? e.parameter.action : '';
 
-  if (action === 'config') {
+  var cb = e.parameter.callback || '';
+
+  function wrap(obj) {
+    var json = JSON.stringify(obj);
     return ContentService
-      .createTextOutput(JSON.stringify(getConfig()))
-      .setMimeType(ContentService.MimeType.JSON);
+      .createTextOutput(cb ? cb + '(' + json + ')' : json)
+      .setMimeType(cb ? ContentService.MimeType.JAVASCRIPT : ContentService.MimeType.JSON);
+  }
+
+  if (action === 'config') {
+    return wrap(getConfig());
   }
 
   if (action === 'submit') {
     try {
       var data = JSON.parse(decodeURIComponent(e.parameter.data));
       submitRecord(data);
-      return ContentService
-        .createTextOutput(JSON.stringify({ success: true }))
-        .setMimeType(ContentService.MimeType.JSON);
+      return wrap({ success: true });
     } catch (err) {
-      return ContentService
-        .createTextOutput(JSON.stringify({ success: false, error: err.message }))
-        .setMimeType(ContentService.MimeType.JSON);
+      return wrap({ success: false, error: err.message });
     }
   }
 
-  return ContentService
-    .createTextOutput(JSON.stringify({ status: 'ok' }))
-    .setMimeType(ContentService.MimeType.JSON);
+  return wrap({ status: 'ok' });
 }
 
 function getConfig() {

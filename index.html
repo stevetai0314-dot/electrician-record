@@ -138,6 +138,19 @@
 </div>
 
 <script>
+  function jsonp(url, callback) {
+    var name = 'cb_' + Date.now();
+    window[name] = function(data) {
+      delete window[name];
+      document.head.removeChild(document.getElementById(name));
+      callback(data);
+    };
+    var s = document.createElement('script');
+    s.id = name;
+    s.src = url + '&callback=' + name;
+    document.head.appendChild(s);
+  }
+
   // ↓ 每次重新部署 GAS 後更新這裡
   var GAS_URL = 'https://script.google.com/macros/s/AKfycbwjN6bU3g-drgqvkgoboxUhYAoYPfTKyx_p2ZqxmDuGAwjoCFZqGz56tV0NAi4caHt-/exec';
 
@@ -145,28 +158,23 @@
   now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
   document.getElementById('reportTime').value = now.toISOString().slice(0, 16);
 
-  fetch(GAS_URL + '?action=config')
-    .then(function(r) { return r.json(); })
-    .then(function(config) {
-      var dept = document.getElementById('department');
-      config.departments.forEach(function(d) { dept.add(new Option(d, d)); });
+  jsonp(GAS_URL + '?action=config', function(config) {
+    var dept = document.getElementById('department');
+    config.departments.forEach(function(d) { dept.add(new Option(d, d)); });
 
-      var elec = document.getElementById('electrician');
-      config.electricians.forEach(function(e) { elec.add(new Option(e, e)); });
+    var elec = document.getElementById('electrician');
+    config.electricians.forEach(function(e) { elec.add(new Option(e, e)); });
 
-      var dl = document.getElementById('area-list');
-      config.areas.forEach(function(a) {
-        var opt = document.createElement('option'); opt.value = a; dl.appendChild(opt);
-      });
-
-      var edl = document.getElementById('equipment-list');
-      config.equipments.forEach(function(e) {
-        var opt = document.createElement('option'); opt.value = e; edl.appendChild(opt);
-      });
-    })
-    .catch(function() {
-      showMsg('載入清單失敗，請重新整理 / Tải dữ liệu thất bại, vui lòng tải lại trang', 'error');
+    var dl = document.getElementById('area-list');
+    config.areas.forEach(function(a) {
+      var opt = document.createElement('option'); opt.value = a; dl.appendChild(opt);
     });
+
+    var edl = document.getElementById('equipment-list');
+    config.equipments.forEach(function(e) {
+      var opt = document.createElement('option'); opt.value = e; edl.appendChild(opt);
+    });
+  });
 
   var REQUIRED = ['department','filler','equipment','equipmentNo','reportTime','electrician','workType','result'];
 
@@ -196,23 +204,16 @@
       remarks:        document.getElementById('remarks').value
     };
 
-    fetch(GAS_URL + '?action=submit&data=' + encodeURIComponent(JSON.stringify(data)))
-      .then(function(r) { return r.json(); })
-      .then(function(result) {
-        if (result.success) {
-          showMsg('✓ 送出成功！/ Gửi thành công!', 'success');
-          resetForm();
-        } else {
-          showMsg('送出失敗，請再試 / Gửi thất bại, vui lòng thử lại', 'error');
-        }
-        btn.disabled = false;
-        btn.textContent = '送出 / Gửi';
-      })
-      .catch(function() {
+    jsonp(GAS_URL + '?action=submit&data=' + encodeURIComponent(JSON.stringify(data)), function(result) {
+      if (result.success) {
+        showMsg('✓ 送出成功！/ Gửi thành công!', 'success');
+        resetForm();
+      } else {
         showMsg('送出失敗，請再試 / Gửi thất bại, vui lòng thử lại', 'error');
-        btn.disabled = false;
-        btn.textContent = '送出 / Gửi';
-      });
+      }
+      btn.disabled = false;
+      btn.textContent = '送出 / Gửi';
+    });
   }
 
   function resetForm() {
