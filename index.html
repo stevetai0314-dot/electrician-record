@@ -98,7 +98,7 @@
 
   <div class="row">
     <div class="field">
-      <label>設備號碼 <span class="vi">/ Số thiết bị</span><span class="required-mark">*</span></label>
+      <label>設備號碼 <span class="vi">/ Số thiết bị</span></label>
       <input type="text" id="equipmentNo" placeholder="輸入號碼">
     </div>
     <div class="field">
@@ -190,7 +190,7 @@
     });
   });
 
-  var REQUIRED = ['department','filler','equipment','equipmentNo','reportTime','electrician','workType','result'];
+  var REQUIRED = ['department','filler','equipment','reportTime','electrician','workType','result'];
 
   function submitForm() {
     for (var i = 0; i < REQUIRED.length; i++) {
