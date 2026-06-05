@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>電工工作紀錄</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f0f4f8; padding: 24px 16px; }
+    .card {
+      background: white; border-radius: 10px; padding: 28px 24px;
+      max-width: 620px; margin: 0 auto;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h2 { color: #1a73e8; font-size: 18px; margin-bottom: 22px; line-height: 1.4; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .field { margin-bottom: 14px; }
+    label { display: block; font-size: 13px; font-weight: bold; color: #333; margin-bottom: 5px; }
+    label .vi { font-weight: normal; color: #888; font-size: 12px; }
+    input, select, textarea {
+      width: 100%; padding: 11px 12px;
+      border: 1px solid #ccc; border-radius: 5px;
+      font-size: 16px; color: #222;          /* 16px 防止 iOS 自動縮放 */
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none; border-color: #1a73e8;
+    }
+    textarea { resize: vertical; min-height: 80px; }
+    .required-mark { color: #d93025; margin-left: 2px; }
+    button {
+      width: 100%; padding: 14px;
+      background: #1a73e8; color: white;
+      border: none; border-radius: 5px;
+      font-size: 16px; cursor: pointer;
+      margin-top: 6px; transition: background 0.2s;
+    }
+    button:hover:not(:disabled) { background: #1558b0; }
+    button:disabled { background: #9ab8e8; cursor: not-allowed; }
+    .msg {
+      text-align: center; padding: 12px 14px;
+      border-radius: 5px; margin-top: 14px;
+      font-size: 15px; display: none;
+    }
+    .msg.success { background: #e6f4ea; color: #1e8e3e; display: block; }
+    .msg.error   { background: #fce8e6; color: #c5221f; display: block; }
+    .divider { border: none; border-top: 1px solid #eee; margin: 18px 0; }
+    @media (max-width: 540px) {
+      body { padding: 12px 10px; }
+      .card { padding: 20px 16px; border-radius: 8px; }
+      .row { grid-template-columns: 1fr; gap: 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h2>電工工作紀錄<br><span style="font-size:14px;color:#555;font-weight:normal">Phiếu ghi công việc thợ điện</span></h2>
+
+  <div class="row">
+    <div class="field">
+      <label>部門 <span class="vi">/ Bộ phận</span><span class="required-mark">*</span></label>
+      <select id="department">
+        <option value="">-- 請選擇 / Chọn --</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>填表人 <span class="vi">/ Người điền phiếu</span><span class="required-mark">*</span></label>
+      <input type="text" id="filler" placeholder="輸入姓名">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label>設備名稱 <span class="vi">/ Tên thiết bị</span><span class="required-mark">*</span></label>
+      <input type="text" id="equipment" list="equipment-list" autocomplete="off" placeholder="可選清單或直接輸入">
+      <datalist id="equipment-list"></datalist>
+    </div>
+    <div class="field">
+      <label>區域 <span class="vi">/ Khu vực</span></label>
+      <input type="text" id="area" list="area-list" autocomplete="off" placeholder="輸入過濾...">
+      <datalist id="area-list"></datalist>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label>設備號碼 <span class="vi">/ Số thiết bị</span><span class="required-mark">*</span></label>
+      <input type="text" id="equipmentNo" placeholder="輸入號碼">
+    </div>
+    <div class="field">
+      <label>維修人員 <span class="vi">/ Nhân viên sửa chữa</span><span class="required-mark">*</span></label>
+      <select id="electrician">
+        <option value="">-- 請選擇 / Chọn --</option>
+      </select>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="row">
+    <div class="field">
+      <label>報修日期時間 <span class="vi">/ Ngày giờ báo sự cố</span><span class="required-mark">*</span></label>
+      <input type="datetime-local" id="reportTime">
+    </div>
+    <div class="field">
+      <label>完成日期時間 <span class="vi">/ Ngày giờ hoàn thành</span></label>
+      <input type="datetime-local" id="completionTime">
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label>工作類型 <span class="vi">/ Loại công việc</span><span class="required-mark">*</span></label>
+      <select id="workType">
+        <option value="">-- 請選擇 / Chọn --</option>
+        <option value="保養">保養 / Bảo dưỡng</option>
+        <option value="故障修復">故障修復 / Sửa chữa sự cố</option>
+        <option value="新裝">新裝 / Lắp đặt mới</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>結果 <span class="vi">/ Kết quả</span><span class="required-mark">*</span></label>
+      <select id="result">
+        <option value="">-- 請選擇 / Chọn --</option>
+        <option value="完成">完成 / Hoàn thành</option>
+        <option value="待處理">待處理 / Chờ xử lý</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>備註說明 <span class="vi">/ Ghi chú</span></label>
+    <textarea id="remarks" placeholder="請詳細說明工作內容，勿只寫零件名稱。例：更換3號機台送風變頻器&#10;Mô tả chi tiết, không chỉ ghi tên linh kiện. VD: Thay biến tần quạt gió máy số 3"></textarea>
+  </div>
+
+  <button id="submitBtn" onclick="submitForm()">送出 / Gửi</button>
+  <div id="msg" class="msg"></div>
+</div>
+
+<script>
+  // 預設報修時間為現在
+  var now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  document.getElementById('reportTime').value = now.toISOString().slice(0,16);
+
+  google.script.run
+    .withSuccessHandler(function(config) {
+      var dept = document.getElementById('department');
+      config.departments.forEach(function(d) { dept.add(new Option(d, d)); });
+
+      var elec = document.getElementById('electrician');
+      config.electricians.forEach(function(e) { elec.add(new Option(e, e)); });
+
+      var dl = document.getElementById('area-list');
+      config.areas.forEach(function(a) {
+        var opt = document.createElement('option');
+        opt.value = a;
+        dl.appendChild(opt);
+      });
+
+      var edl = document.getElementById('equipment-list');
+      config.equipments.forEach(function(e) {
+        var opt = document.createElement('option');
+        opt.value = e;
+        edl.appendChild(opt);
+      });
+    })
+    .getConfig();
+
+  var REQUIRED = ['department','filler','equipment','equipmentNo','reportTime','electrician','workType','result'];
+
+  function submitForm() {
+    for (var i = 0; i < REQUIRED.length; i++) {
+      if (!document.getElementById(REQUIRED[i]).value) {
+        showMsg('請填寫所有必填欄位 / Vui lòng điền đầy đủ thông tin', 'error');
+        return;
+      }
+    }
+
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = '送出中... / Đang gửi...';
+
+    google.script.run
+      .withSuccessHandler(function() {
+        showMsg('✓ 送出成功！/ Gửi thành công!', 'success');
+        resetForm();
+        btn.disabled = false;
+        btn.textContent = '送出 / Gửi';
+      })
+      .withFailureHandler(function() {
+        showMsg('送出失敗，請再試 / Gửi thất bại, vui lòng thử lại', 'error');
+        btn.disabled = false;
+        btn.textContent = '送出 / Gửi';
+      })
+      .submitRecord({
+        department:     document.getElementById('department').value,
+        filler:         document.getElementById('filler').value,
+        equipment:      document.getElementById('equipment').value,
+        area:           document.getElementById('area').value,
+        equipmentNo:    document.getElementById('equipmentNo').value,
+        reportTime:     document.getElementById('reportTime').value,
+        electrician:    document.getElementById('electrician').value,
+        workType:       document.getElementById('workType').value,
+        completionTime: document.getElementById('completionTime').value,
+        result:         document.getElementById('result').value,
+        remarks:        document.getElementById('remarks').value
+      });
+  }
+
+  function resetForm() {
+    ['equipment','area','equipmentNo','completionTime','remarks'].forEach(function(id) {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('workType').value = '';
+    document.getElementById('result').value = '';
+    var now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('reportTime').value = now.toISOString().slice(0,16);
+  }
+
+  function showMsg(text, type) {
+    var el = document.getElementById('msg');
+    el.textContent = text;
+    el.className = 'msg ' + type;
+  }
+</script>
+</body>
+</html>
