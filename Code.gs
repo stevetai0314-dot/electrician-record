@@ -2,16 +2,37 @@ var RECORD_SHEET = '電工工作紀錄';
 var AREA_SHEET   = '區域清單';
 var CONFIG_SHEET = '人員設定';
 
-function doGet() {
-  return HtmlService.createHtmlOutputFromFile('index')
-    .setTitle('電工工作紀錄')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+function doGet(e) {
+  var action = (e && e.parameter) ? e.parameter.action : '';
+
+  if (action === 'config') {
+    return ContentService
+      .createTextOutput(JSON.stringify(getConfig()))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (action === 'submit') {
+    try {
+      var data = JSON.parse(decodeURIComponent(e.parameter.data));
+      submitRecord(data);
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: true }))
+        .setMimeType(ContentService.MimeType.JSON);
+    } catch (err) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: false, error: err.message }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ status: 'ok' }))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function getConfig() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
 
-  // 區域清單：多欄，全部攤平
   var areas = [];
   var areaSheet = ss.getSheetByName(AREA_SHEET);
   if (areaSheet) {
@@ -22,7 +43,6 @@ function getConfig() {
     });
   }
 
-  // 人員設定：A欄=部門、B欄=電工、C欄=設備清單
   var departments = [], electricians = [], equipments = [];
   var configSheet = ss.getSheetByName(CONFIG_SHEET);
   if (configSheet) {
@@ -63,6 +83,4 @@ function submitRecord(data) {
     data.result,
     data.remarks
   ]);
-
-  return { success: true };
 }

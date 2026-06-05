@@ -20,7 +20,7 @@
     input, select, textarea {
       width: 100%; padding: 11px 12px;
       border: 1px solid #ccc; border-radius: 5px;
-      font-size: 16px; color: #222;          /* 16px 防止 iOS 自動縮放 */
+      font-size: 16px; color: #222;
       transition: border-color 0.2s;
     }
     input:focus, select:focus, textarea:focus {
@@ -138,13 +138,16 @@
 </div>
 
 <script>
-  // 預設報修時間為現在
+  // ↓ 每次重新部署 GAS 後更新這裡
+  var GAS_URL = 'https://script.google.com/macros/s/AKfycbwjN6bU3g-drgqvkgoboxUhYAoYPfTKyx_p2ZqxmDuGAwjoCFZqGz56tV0NAi4caHt-/exec';
+
   var now = new Date();
   now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-  document.getElementById('reportTime').value = now.toISOString().slice(0,16);
+  document.getElementById('reportTime').value = now.toISOString().slice(0, 16);
 
-  google.script.run
-    .withSuccessHandler(function(config) {
+  fetch(GAS_URL + '?action=config')
+    .then(function(r) { return r.json(); })
+    .then(function(config) {
       var dept = document.getElementById('department');
       config.departments.forEach(function(d) { dept.add(new Option(d, d)); });
 
@@ -153,19 +156,17 @@
 
       var dl = document.getElementById('area-list');
       config.areas.forEach(function(a) {
-        var opt = document.createElement('option');
-        opt.value = a;
-        dl.appendChild(opt);
+        var opt = document.createElement('option'); opt.value = a; dl.appendChild(opt);
       });
 
       var edl = document.getElementById('equipment-list');
       config.equipments.forEach(function(e) {
-        var opt = document.createElement('option');
-        opt.value = e;
-        edl.appendChild(opt);
+        var opt = document.createElement('option'); opt.value = e; edl.appendChild(opt);
       });
     })
-    .getConfig();
+    .catch(function() {
+      showMsg('載入清單失敗，請重新整理 / Tải dữ liệu thất bại, vui lòng tải lại trang', 'error');
+    });
 
   var REQUIRED = ['department','filler','equipment','equipmentNo','reportTime','electrician','workType','result'];
 
@@ -181,30 +182,36 @@
     btn.disabled = true;
     btn.textContent = '送出中... / Đang gửi...';
 
-    google.script.run
-      .withSuccessHandler(function() {
-        showMsg('✓ 送出成功！/ Gửi thành công!', 'success');
-        resetForm();
+    var data = {
+      department:     document.getElementById('department').value,
+      filler:         document.getElementById('filler').value,
+      equipment:      document.getElementById('equipment').value,
+      area:           document.getElementById('area').value,
+      equipmentNo:    document.getElementById('equipmentNo').value,
+      reportTime:     document.getElementById('reportTime').value,
+      electrician:    document.getElementById('electrician').value,
+      workType:       document.getElementById('workType').value,
+      completionTime: document.getElementById('completionTime').value,
+      result:         document.getElementById('result').value,
+      remarks:        document.getElementById('remarks').value
+    };
+
+    fetch(GAS_URL + '?action=submit&data=' + encodeURIComponent(JSON.stringify(data)))
+      .then(function(r) { return r.json(); })
+      .then(function(result) {
+        if (result.success) {
+          showMsg('✓ 送出成功！/ Gửi thành công!', 'success');
+          resetForm();
+        } else {
+          showMsg('送出失敗，請再試 / Gửi thất bại, vui lòng thử lại', 'error');
+        }
         btn.disabled = false;
         btn.textContent = '送出 / Gửi';
       })
-      .withFailureHandler(function() {
+      .catch(function() {
         showMsg('送出失敗，請再試 / Gửi thất bại, vui lòng thử lại', 'error');
         btn.disabled = false;
         btn.textContent = '送出 / Gửi';
-      })
-      .submitRecord({
-        department:     document.getElementById('department').value,
-        filler:         document.getElementById('filler').value,
-        equipment:      document.getElementById('equipment').value,
-        area:           document.getElementById('area').value,
-        equipmentNo:    document.getElementById('equipmentNo').value,
-        reportTime:     document.getElementById('reportTime').value,
-        electrician:    document.getElementById('electrician').value,
-        workType:       document.getElementById('workType').value,
-        completionTime: document.getElementById('completionTime').value,
-        result:         document.getElementById('result').value,
-        remarks:        document.getElementById('remarks').value
       });
   }
 
@@ -214,9 +221,9 @@
     });
     document.getElementById('workType').value = '';
     document.getElementById('result').value = '';
-    var now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    document.getElementById('reportTime').value = now.toISOString().slice(0,16);
+    var n = new Date();
+    n.setMinutes(n.getMinutes() - n.getTimezoneOffset());
+    document.getElementById('reportTime').value = n.toISOString().slice(0, 16);
   }
 
   function showMsg(text, type) {
