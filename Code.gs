@@ -37,7 +37,7 @@ function getConfig() {
   var areas = [];
   var areaSheet = ss.getSheetByName(AREA_SHEET);
   if (areaSheet) {
-    areaSheet.getDataRange().getValues().forEach(function(row) {
+    areaSheet.getDataRange().getValues().slice(1).forEach(function(row) {
       row.forEach(function(cell) {
         if (cell) areas.push(String(cell).trim());
       });
@@ -47,7 +47,7 @@ function getConfig() {
   var departments = [], electricians = [], equipments = [];
   var configSheet = ss.getSheetByName(CONFIG_SHEET);
   if (configSheet) {
-    configSheet.getDataRange().getValues().forEach(function(row) {
+    configSheet.getDataRange().getValues().slice(1).forEach(function(row) {
       if (row[0]) departments.push(String(row[0]).trim());
       if (row[1]) electricians.push(String(row[1]).trim());
       if (row[2]) equipments.push(String(row[2]).trim());
